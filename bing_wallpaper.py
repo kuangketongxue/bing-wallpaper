@@ -1,9 +1,7 @@
 """
 壁纸自动更新程序
-- 每天自动下载并设置高清壁纸
-- 优先使用 Unsplash API（支持关键词搜索）
-- 备选必应 API
-- 偏好：大海、阳光、动漫风格
+- 从本地壁纸图库随机选择图片
+- 每天自动更换桌面壁纸
 - 支持开机自启动和后台静默运行
 """
 import os
@@ -11,30 +9,24 @@ import sys
 import json
 import time
 import ctypes
-import requests
 import hashlib
 import random
-from datetime import datetime, timedelta
+import requests
+from datetime import datetime
 from pathlib import Path
 import winreg
-import atexit
-import tempfile
 
 # 配置
 WALLPAPER_LIBRARY = Path(__file__).parent / "壁纸图库"  # 壁纸图库目录
 CONFIG_FILE = Path(__file__).parent / "config.json"
 HISTORY_FILE = Path(__file__).parent / "history.json"
 
-# 用户偏好关键词（用于 Unsplash 搜索）
+# 用户偏好关键词（用于网络备用方案）
 UNSPASH_KEYWORDS = [
     'ocean sunset', 'beach sunshine', 'sea waves', 'blue ocean', 'tropical beach',
     'anime landscape', 'anime sky', 'anime sea', 'cartoon nature', 'illustration ocean',
     'sunset beach', 'sunrise ocean', 'calm sea', 'crystal water', 'paradise island'
 ]
-
-# 必应 API 配置（备用方案）
-BING_API_URL = "https://www.bing.com/HPImageArchive.aspx"
-BING_BASE_URL = "https://www.bing.com"
 
 
 class WallpaperManager:
@@ -47,10 +39,6 @@ class WallpaperManager:
         # 初始化配置
         self._load_config()
         self._load_history()
-
-    def _init_directories(self):
-        """初始化壁纸存储目录"""
-        self.wallpaper_dir.mkdir(exist_ok=True)
 
     def _load_config(self):
         """加载配置文件"""
@@ -141,10 +129,7 @@ class WallpaperManager:
         wallpapers = []
 
         try:
-            # 随机选择一个关键词搜索
             keyword = random.choice(UNSPASH_KEYWORDS)
-
-            # 使用 Pollinations AI API
             url = f"https://image.pollinations.ai/prompt/{keyword}?width=1920&height=1080&nologo=true&seed={int(time.time())}"
 
             print(f'正在获取壁纸 (关键词：{keyword})')
@@ -153,12 +138,10 @@ class WallpaperManager:
             })
             response.raise_for_status()
 
-            # 生成唯一文件名，保存到壁纸图库
             md5 = hashlib.md5(f"{keyword}_{int(time.time())}".encode()).hexdigest()[:8]
             self.wallpaper_library.mkdir(exist_ok=True)
             local_path = self.wallpaper_library / f"wallpaper_{md5}.jpg"
 
-            # 直接保存到文件
             with open(local_path, 'wb') as f:
                 f.write(response.content)
 
@@ -177,56 +160,6 @@ class WallpaperManager:
             print(f'获取网络壁纸失败：{e}')
 
         return wallpapers
-
-    def _calculate_preference_score(self, wallpaper):
-        """计算壁纸与用户偏好的匹配分数"""
-        score = 0
-        text_to_check = (
-            wallpaper.get('copyright', '') + ' ' +
-            wallpaper.get('title', '') + ' ' +
-            wallpaper.get('quiz', '')
-        ).lower()
-
-        for keyword in PREFERRED_KEYWORDS:
-            if keyword.lower() in text_to_check:
-                score += 1
-
-        return score
-
-    def download_wallpaper(self, wallpaper_info):
-        """下载壁纸到本地"""
-        try:
-            url = wallpaper_info['url']
-            md5 = wallpaper_info['md5']
-
-            # 检查是否已下载
-            local_path = self.wallpaper_dir / f"bing_{md5}.jpg"
-            if local_path.exists():
-                print(f'壁纸已存在：{local_path}')
-                wallpaper_info['downloaded'] = True
-                wallpaper_info['local_path'] = str(local_path)
-                return str(local_path)
-
-            # 下载新壁纸
-            print(f'正在下载：{url}')
-            response = requests.get(url, timeout=30, headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            })
-            response.raise_for_status()
-
-            # 保存到文件
-            with open(local_path, 'wb') as f:
-                f.write(response.content)
-
-            print(f'下载完成：{local_path}')
-            wallpaper_info['downloaded'] = True
-            wallpaper_info['local_path'] = str(local_path)
-
-            return str(local_path)
-
-        except Exception as e:
-            print(f'下载壁纸失败：{e}')
-            return None
 
     def set_as_wallpaper(self, image_path):
         """设置桌面壁纸"""
