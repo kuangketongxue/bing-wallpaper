@@ -18,7 +18,7 @@ MAIN_SCRIPT = os.path.join(SCRIPT_DIR, 'bing_wallpaper.py')
 LOCK_FILE = os.path.join(SCRIPT_DIR, '.watchdog.lock')
 LAST_RUN_FILE = os.path.join(SCRIPT_DIR, '.last_run.json')
 
-UPDATE_INTERVAL_HOURS = 24  # 更新间隔
+UPDATE_INTERVAL_HOURS = 1  # 更新间隔（小时）
 
 
 def is_already_running():

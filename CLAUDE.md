@@ -11,7 +11,7 @@
 ## 核心文件
 ```
 bing_wallpaper.py    — 主程序（获取 API、下载、设置壁纸）
-watchdog.py          — 看门狗守护进程（每 24 小时唤醒主程序）
+watchdog.py          — 看门狗守护进程（每小时唤醒主程序）
 wallpapers/          — 壁纸存储目录
 config.json          — 配置文件（上次更新时间、更新间隔）
 history.json         — 历史记录（最近 30 张壁纸）
@@ -33,7 +33,7 @@ history.json         — 历史记录（最近 30 张壁纸）
 ## 关键配置位置
 | 配置 | 位置 | 默认值 |
 |------|------|--------|
-| 更新间隔 | `UPDATE_INTERVAL_HOURS` (watchdog.py) | 24 小时 |
+| 更新间隔 | `UPDATE_INTERVAL_HOURS` (watchdog.py) | 1 小时 |
 | 历史保留数 | `cleanup_old_wallpapers()` | 最近 10 张 |
 | 历史记录上限 | `_save_history()` | 最近 30 条 |
 | 偏好关键词 | `UNSPASH_KEYWORDS` | 见上方表格 |

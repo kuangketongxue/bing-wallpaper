@@ -42,6 +42,7 @@ Thumbs.db
 # 日志
 *.log
 
-# 锁文件
+# 锁文件和运行时状态
 *.lock
 .*.lock
+.last_run.json
